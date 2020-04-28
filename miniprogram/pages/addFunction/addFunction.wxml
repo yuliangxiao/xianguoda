@@ -1,0 +1,78 @@
+<!--pages/addFunction/addFunction.wxml-->
+<view class="container">
+
+	<view class="list">
+		<view class="list-item" bindtap="testFunction">
+			<text>测试云函数</text>
+		</view>
+		<view class="list-item" bindtap="goods_edit">
+			<text>商品编辑</text>
+		</view>
+		<view class="list-item" bindtap="goods_select">
+			<text>商品查询</text>
+		</view>
+		<view class="list-item" bindtap="user_edit">
+			<text>用户编辑</text>
+		</view>
+		<view class="list-item" bindtap="user_select">
+			<text>用户查询</text>
+		</view>
+		<view class="list-item" bindtap="reprint_edit">
+			<text>转载编辑</text>
+		</view>
+		<view class="list-item" bindtap="reprint_select">
+			<text>转载查询</text>
+		</view>
+		<view class="list-item" bindtap="order_edit">
+			<text>订单编辑</text>
+		</view>
+		<view class="list-item" bindtap="order_select">
+			<text>订单查询</text>
+		</view>
+		<view class="list-item" bindtap="couponUser_edit">
+			<text>个人持有优惠券编辑</text>
+		</view>
+		<view class="list-item" bindtap="couponUser_select">
+			<text>个人持有优惠券查询</text>
+		</view>
+		<view class="list-item" bindtap="evaluate_edit">
+			<text>评价编辑</text>
+		</view>
+		<view class="list-item" bindtap="evaluate_select">
+			<text>评价查询</text>
+		</view>
+		<view class="list-item" bindtap="collection_edit">
+			<text>收藏编辑</text>
+		</view>
+		<view class="list-item" bindtap="collection_select">
+			<text>收藏查询</text>
+		</view>
+		<view class="list-item" bindtap="shoppingCart_edit">
+			<text>评价编辑</text>
+		</view>
+		<view class="list-item" bindtap="shoppingCart_select">
+			<text>评价查询</text>
+		</view>
+		<view class="list-item" bindtap="sign_edit">
+			<text>签到编辑</text>
+		</view>
+		<view class="list-item" bindtap="sign_select">
+			<text>签到查询</text>
+		</view>
+		<view class="list-item" bindtap="payRecord_edit">
+			<text>支付记录编辑</text>
+		</view>
+		<view class="list-item" bindtap="payRecord_select">
+			<text>支付记录查询</text>
+		</view>
+		<view class="list-item" bindtap="shop_edit">
+			<text>店铺修改</text>
+		</view>
+		<view class="list-item" bindtap="shop_select">
+			<text>店铺查询</text>
+		</view>
+			<view class="list-item" bindtap="goodsType_select">
+			<text>商品类别查询</text>
+		</view>
+	</view>
+</view>
