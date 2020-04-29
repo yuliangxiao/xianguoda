@@ -48,10 +48,10 @@
 			<text>收藏查询</text>
 		</view>
 		<view class="list-item" bindtap="shoppingCart_edit">
-			<text>评价编辑</text>
+			<text>购物车编辑</text>
 		</view>
 		<view class="list-item" bindtap="shoppingCart_select">
-			<text>评价查询</text>
+			<text>购物车查询</text>
 		</view>
 		<view class="list-item" bindtap="sign_edit">
 			<text>签到编辑</text>

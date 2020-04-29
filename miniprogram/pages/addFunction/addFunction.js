@@ -363,8 +363,10 @@ Page({
       name: 'collection_edit',
       data: {
         _id: '0',
-        OpenID: 'OpenID',
-        ReprintID: '1'
+        data: {
+          OpenID: 'OpenID',
+          ReprintID: '1'
+        }
       },
       success: res => {
         console.log(res.result)
@@ -393,8 +395,11 @@ Page({
       name: 'shoppingCart_edit',
       data: {
         _id: '0',
-        OpenID: 'OpenID',
-        ReprintID: '1'
+        data: {
+          OpenID: 'OpenID',
+          ReprintID: '1',
+          Num: 10
+        }
       },
       success: res => {
         console.log(res.result)
@@ -422,8 +427,9 @@ Page({
     wx.cloud.callFunction({
       name: 'sign_edit',
       data: {
-        _id: '0',
-        OpenID: 'OpenID'
+        data: {
+          OpenID: 'OpenID'
+        }
       },
       success: res => {
         console.log(res.result)

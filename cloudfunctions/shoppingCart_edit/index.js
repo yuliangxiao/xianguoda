@@ -13,7 +13,7 @@ exports.main = async (event, context) => {
     })
   } else {
     return await db.collection('ShoppingCart').where({
-        OpenID: event._id
+        OpenID: event.OpenID
       })
       .update({
         data: data_json,
