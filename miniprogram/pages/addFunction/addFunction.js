@@ -211,18 +211,9 @@ Page({
         _id: '794792045ea283220019df1026f6a1a1',
       },
       success: res => {
-        wx.showToast({
-          title: '调用成功',
-        })
-        this.setData({
-          result: JSON.stringify(res)
-        })
+        console.log(res.result)
       },
       fail: err => {
-        wx.showToast({
-          icon: 'none',
-          title: '调用失败',
-        })
         console.error('[云函数] [sum] 调用失败：', err)
       }
     })
