@@ -51,8 +51,68 @@ exports.main = async (event, context) => {
     test_result.list[0].TotalSales = 0
   }
   //location位置
+  const Location = await db.collection('Location').where({
+    _id: test_result.list[0].LocationID
+  }).get()
+
+  test_result.list[0].LocationText = Location.data[0].Village
+
+  let UserListResult = ''
   //团购人数
-  //供货商
+  await db.collection("OrderDetail")
+    .aggregate()
+    .match({
+      ReprintID: event._id
+    })
+    .lookup({
+      from: "User",
+      localField: 'OpenID',
+      foreignField: 'OpenID',
+      as: 'UserList'
+    })
+    .replaceRoot({
+      newRoot: $.mergeObjects([$.arrayElemAt(['$UserList', 0]), '$$ROOT'])
+    })
+    .project({
+      UserList: 0
+    })
+    .end()
+    .then(res => UserListResult = res)
+    .catch(err => UserListResult = err)
+  if (UserListResult.list.length > 0) {
+    test_result.list[0].UserList = UserListResult.list
+  } else {
+    test_result.list[0].UserList = []
+  }
+  //供货商 目前查询当前团长下的所有当前类别产品的列表吧
+  let GoodsListOtherResult = ''
+  await db.collection("OrderDetail")
+    .aggregate()
+    .match({
+      GoodsID: test_result.list[0].GoodsID,
+      ShopID: test_result.list[0].ShopID
+    })
+    .lookup({
+      from: "Goods",
+      localField: 'GoodsID',
+      foreignField: '_id',
+      as: 'GoodsOtherList'
+    })
+    .replaceRoot({
+      newRoot: $.mergeObjects([$.arrayElemAt(['$GoodsOtherList', 0]), '$$ROOT'])
+    })
+    .project({
+      GoodsOtherList: 0
+    })
+    .end()
+    .then(res => GoodsListOtherResult = res)
+    .catch(err => GoodsListOtherResult = err)
+  console.log(GoodsListOtherResult)
+  if (GoodsListOtherResult.list.length > 0) {
+    test_result.list[0].GoodsOtherList = GoodsListOtherResult.list
+  } else {
+    test_result.list[0].GoodsOtherList = []
+  }
 
   console.log(test_result)
   return test_result;
