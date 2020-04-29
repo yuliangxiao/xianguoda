@@ -527,4 +527,21 @@ Page({
       }
     })
   },
+  reprint_list() {
+    wx.cloud.callFunction({
+      name: 'reprint_list',
+      data: {
+        flag: 2,
+        Title: '标'
+        // GoodsTypeID: '1'
+        // ShopID: '3f8c212f5ea6db4a006519ec74d86105'
+      },
+      success: res => {
+        console.log(res.result)
+      },
+      fail: err => {
+        console.error('[云函数] [sum] 调用失败：', err)
+      }
+    })
+  },
 })

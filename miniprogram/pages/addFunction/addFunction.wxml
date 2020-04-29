@@ -71,8 +71,11 @@
 		<view class="list-item" bindtap="shop_select">
 			<text>店铺查询</text>
 		</view>
-			<view class="list-item" bindtap="goodsType_select">
+		<view class="list-item" bindtap="goodsType_select">
 			<text>商品类别查询1111</text>
+		</view>
+		<view class="list-item" bindtap="reprint_list">
+			<text>产品列表</text>
 		</view>
 	</view>
 </view>
