@@ -77,5 +77,8 @@
 		<view class="list-item" bindtap="reprint_list">
 			<text>产品列表</text>
 		</view>
+		<view class="list-item" bindtap="ancillary_fun">
+			<text>附属列表</text>
+		</view>
 	</view>
 </view>
