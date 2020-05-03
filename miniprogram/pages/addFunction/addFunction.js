@@ -548,9 +548,18 @@ Page({
     wx.cloud.callFunction({
       name: 'ancillary_fun',
       data: {
-        flag: 0,
+        // flag: 0,
+        // data: {
+        //   OpenID: 'openid'
+        // }
+        // flag: 1,
+        // data: {
+        //   OpenID: 'openid',
+        //   keyword: '标'
+        // }
+        flag: 2,
         data: {
-          OpenID: 'openid'
+          GoodsID: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
         }
       },
       success: res => {

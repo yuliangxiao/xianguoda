@@ -17,8 +17,8 @@ function GetDistance(lat1, lng1, lat2, lng2) {
   return s;
 }
 // 云函数入口函数 附属功能集合 
-//prarm1:flag 接口类型 0-获取热卖接口 (必填)
-//prarm2:data 参数列表
+//prarm1:flag 接口类型 0-获取热卖接口 (必填) 1-首页地图展示及首页列表展示接口 2-根据商品表id获取转载表数据
+//prarm2:data 参数列表 keyword-搜索关键字(1)
 
 //fun1 获取热卖列表，最多3个
 
@@ -46,42 +46,33 @@ exports.main = async (event, context) => {
       .then(res => UserData = res)
       .catch(err => UserData = err)
 
-    let GoodsList = {}
-    await db.collection("Goods")
-      .aggregate()
-      .match({
-        IsFlag: true
-      })
-      .lookup({
-        from: "Location",
-        localField: 'LocationID',
-        foreignField: '_id',
-        as: 'LocationList'
-      })
-      // .replaceRoot({
-      //   newRoot: $.mergeObjects([$.arrayElemAt(['$LocationList', 0]), '$$ROOT'])
-      // })
-      // .project({
-      //   LocationList: 0
-      // })
-      .end()
-      .then(res => GoodsList = res)
-      .catch(err => GoodsList = err)
+    const GoodsList = await db.collection('Goods').where({
+      IsFlag: true
+    }).get()
+    // await db.collection("Goods")
+    //   .aggregate()
+    //   .match({
+    //     IsFlag: true
+    //   })
+    //   .lookup({
+    //     from: "Location",
+    //     localField: 'LocationID',
+    //     foreignField: '_id',
+    //     as: 'LocationList'
+    //   })
+    //   .end()
+    //   .then(res => GoodsList = res)
+    //   .catch(err => GoodsList = err)
     let Result_List = {}
     let c = 0
-    console.log(GoodsList.list)
-    for (let i = 0; i < GoodsList.list.length; i++) {
-      console.log(GoodsList.list[i].DeliveryRange)
-      console.log(GoodsList.list[i].LocationList[0].LocationXY.coordinates[1])
-      console.log(GoodsList.list[i].LocationList[0].LocationXY.coordinates[0])
-      console.log(UserData.list[0].LocationXY.coordinates[1])
-      console.log(UserData.list[0].LocationXY.coordinates[0])
-      if (GoodsList.list[i].DeliveryRange >
-        GetDistance(GoodsList.list[i].LocationList[0].LocationXY.coordinates[1],
-          GoodsList.list[i].LocationList[0].LocationXY.coordinates[0],
+    for (let i = 0; i < GoodsList.data.length; i++) {
+      if (GoodsList.data[i].DeliveryRange >
+        GetDistance(GoodsList.data[i].LocationXY.latitude,
+          GoodsList.data[i].LocationXY.longitude,
           UserData.list[0].LocationXY.coordinates[1], UserData.list[0].LocationXY.coordinates[0])) {
-        Result_List[c] = GoodsList.list[i]
+        Result_List[c] = GoodsList.data[i]
         c++
+        if (c > 3) break
       }
     }
     console.log(Result_List)
@@ -89,6 +80,95 @@ exports.main = async (event, context) => {
 
     return Result_List;
 
+  } else if (event.flag == 1) {
+    let UserData = {}
+    await db.collection("User")
+      .aggregate()
+      .match({
+        OpenID: event.data.OpenID
+      })
+      .lookup({
+        from: "Location",
+        localField: 'LocationID',
+        foreignField: '_id',
+        as: 'LocationList'
+      })
+      .replaceRoot({
+        newRoot: $.mergeObjects([$.arrayElemAt(['$LocationList', 0]), '$$ROOT'])
+      })
+      .project({
+        LocationList: 0
+      })
+      .end()
+      .then(res => UserData = res)
+      .catch(err => UserData = err)
+    let GoodsList = {}
+    if (event.data.keyword == '') {
+      await db.collection("Goods")
+        .aggregate()
+        .match({
+          IsFlag: true
+        })
+        .lookup({
+          from: "Location",
+          localField: 'LocationID',
+          foreignField: '_id',
+          as: 'LocationList'
+        })
+        .end()
+        .then(res => GoodsList = res)
+        .catch(err => GoodsList = err)
+    } else {
+      await db.collection("Goods")
+        .aggregate()
+        .match({
+          Title: db.RegExp({
+            regexp: event.data.keyword,
+            option: 'i'
+          })
+        })
+        .lookup({
+          from: "Location",
+          localField: 'LocationID',
+          foreignField: '_id',
+          as: 'LocationList'
+        })
+        .end()
+        .then(res => GoodsList = res)
+        .catch(err => GoodsList = err)
+    }
+    let Result_List = {}
+    let c = 0
+    for (let i = 0; i < GoodsList.list.length; i++) {
+      if (GoodsList.list[i].DeliveryRange >
+        GetDistance(GoodsList.list[i].LocationXY.coordinates[1],
+          GoodsList.list[i].LocationXY.coordinates[0],
+          UserData.list[0].LocationXY.coordinates[1], UserData.list[0].LocationXY.coordinates[0])) {
+        Result_List[c] = GoodsList.list[i]
+        c++
+        if (c > 3) break
+      }
+    }
+    console.log(Result_List)
+    return Result_List
+  } else if (event.flag == 2) {
+    let Result_List = {}
+    await db.collection("Goods")
+      .aggregate()
+      .match({
+        _id: event.data.GoodsID
+      })
+      .lookup({
+        from: "Reprint",
+        localField: 'ShopID',
+        foreignField: 'ShopID',
+        as: 'ReprintList'
+      })
+      .end()
+      .then(res => Result_List = res)
+      .catch(err => Result_List = err)
+    console.log(Result_List)
+    return Result_List;
   } else {
     return '123';
   }
