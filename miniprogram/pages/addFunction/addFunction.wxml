@@ -80,5 +80,8 @@
 		<view class="list-item" bindtap="ancillary_fun">
 			<text>附属列表</text>
 		</view>
+			<view class="list-item" bindtap="goods_relevant">
+			<text>店铺订单界面</text>
+		</view>
 	</view>
 </view>

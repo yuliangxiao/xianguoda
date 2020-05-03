@@ -570,4 +570,29 @@ Page({
       }
     })
   },
+  goods_relevant() {
+    wx.cloud.callFunction({
+      name: 'goods_relevant',
+      data: {
+        // flag: 0,
+        // data: {
+        //   OpenID: 'openid'
+        // }
+        // flag: 1,
+        // data: {
+        //   GoodsID: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
+        // }
+        flag: 2,
+        data: {
+          GoodsID: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
+        }
+      },
+      success: res => {
+        console.log(res.result)
+      },
+      fail: err => {
+        console.error('[云函数] [sum] 调用失败：', err)
+      }
+    })
+  },
 })
