@@ -8,55 +8,94 @@ const $ = db.command.aggregate
 // 0-个人中心界面订单数量显示
 exports.main = async (event, context) => {
 
-
-
-  const result1 = await db.collection('Order').where({
-    OpenID: event.data.OpenID,
-    IsPay: false
-  }).get()
-
-  let result2 = {}
-  await db.collection('OrderDetail').aggregate()
-    .lookup({
-      from: "Order",
-      localField: 'OrderID',
-      foreignField: '_id',
-      as: 'OrderList'
-    })
-    .replaceRoot({
-      newRoot: $.mergeObjects([$.arrayElemAt(['$OrderList', 0]), '$$ROOT'])
-    })
-    .project({
-      OrderList: 0
-    })
-    .match({
+  if (event.flag == 0) {
+    const result1 = await db.collection('Order').where({
       OpenID: event.data.OpenID,
-      IsDeliver: false,
-      IsPay: true
-    })
-    .end()
-    .then(res => result2 = res)
-    .catch(err => result2 = err)
+      IsPay: false
+    }).get()
 
-  console.log(result2)
-  // const result2 = await db.collection('OrderDetail').where({
-  //   OpenID: event.data.OpenID,
-  //   IsDeliver: false
-  // }).get()
-  // const result3 = await db.collection('OrderDetail').where({
-  //   OpenID: event.data.OpenID,
-  //   IsReceiving: false
-  // }).get()
-  // const result4 = await db.collection('OrderDetail').where({
-  //   OpenID: event.data.OpenID,
-  //   IsEvaluate: false
-  // }).get()
-  // let result = {
-  //   'result1': result1.data.length,
-  //   'result2': result2.data.length,
-  //   'result3': result3.data.length,
-  //   'result4': result4.data.length
-  // }
+    let result2 = {}
+    await db.collection('OrderDetail').aggregate()
+      .lookup({
+        from: "Order",
+        localField: 'OrderID',
+        foreignField: '_id',
+        as: 'OrderList'
+      })
+      .replaceRoot({
+        newRoot: $.mergeObjects([$.arrayElemAt(['$OrderList', 0]), '$$ROOT'])
+      })
+      .project({
+        OrderList: 0
+      })
+      .match({
+        OpenID: event.data.OpenID,
+        IsDeliver: false,
+        IsPay: true
+      })
+      .end()
+      .then(res => result2 = res)
+      .catch(err => result2 = err)
+    let result3 = {}
+    await db.collection('OrderDetail').aggregate()
+      .lookup({
+        from: "Order",
+        localField: 'OrderID',
+        foreignField: '_id',
+        as: 'OrderList'
+      })
+      .replaceRoot({
+        newRoot: $.mergeObjects([$.arrayElemAt(['$OrderList', 0]), '$$ROOT'])
+      })
+      .project({
+        OrderList: 0
+      })
+      .match({
+        OpenID: event.data.OpenID,
+        IsDeliver: true,
+        IsPay: true,
+        IsReceiving: false
+      })
+      .end()
+      .then(res => result3 = res)
+      .catch(err => result3 = err)
+    let result4 = {}
+    await db.collection('OrderDetail').aggregate()
+      .lookup({
+        from: "Order",
+        localField: 'OrderID',
+        foreignField: '_id',
+        as: 'OrderList'
+      })
+      .replaceRoot({
+        newRoot: $.mergeObjects([$.arrayElemAt(['$OrderList', 0]), '$$ROOT'])
+      })
+      .project({
+        OrderList: 0
+      })
+      .match({
+        OpenID: event.data.OpenID,
+        IsDeliver: true,
+        IsPay: true,
+        IsReceiving: true,
+        IsEvaluate: false
+      })
+      .end()
+      .then(res => result4 = res)
+      .catch(err => result4 = err)
+    let result = {
+      'result1': result1.data.length,
+      'result2': result2.list.length,
+      'result3': result3.list.length,
+      'result4': result4.list.length
+    }
+    console.log(result)
+    return result;
+  } else {
+    return '12123';
+  }
+
+
   // const $ = db.command.aggregate
   // const result = db
   //   .collection('Order')
