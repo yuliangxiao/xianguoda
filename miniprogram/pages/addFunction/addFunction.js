@@ -262,9 +262,14 @@ Page({
     wx.cloud.callFunction({
       name: 'order_select',
       data: {
-        flag: 0,
+        // flag: 0,
+        // data: {
+        //   OpenID: 'openid'
+        // }
+        flag: 1,
         data: {
-          OpenID: 'openid'
+          OpenID: 'openid',
+          type: 2
         }
       },
       success: res => {
