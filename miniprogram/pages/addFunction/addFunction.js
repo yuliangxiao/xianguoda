@@ -262,22 +262,15 @@ Page({
     wx.cloud.callFunction({
       name: 'order_select',
       data: {
-        _id: 'fdb5d5d75ea29907001561545f423c72',
+        flag: 0,
+        data: {
+          OpenID: 'openid'
+        }
       },
       success: res => {
-        wx.showToast({
-          title: '调用成功',
-        })
-        console.log(new Date(res.result.data[0].CreateTime).toLocaleString())
-        this.setData({
-          result: JSON.stringify(res)
-        })
+        console.log(res)
       },
       fail: err => {
-        wx.showToast({
-          icon: 'none',
-          title: '调用失败',
-        })
         console.error('[云函数] [sum] 调用失败：', err)
       }
     })
