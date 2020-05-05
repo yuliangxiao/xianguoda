@@ -86,7 +86,7 @@ exports.main = async (event, context) => {
   }
   //供货商 目前查询当前团长下的所有当前类别产品的列表吧
   let GoodsListOtherResult = ''
-  await db.collection("OrderDetail")
+  await db.collection("Reprint")
     .aggregate()
     .match({
       GoodsID: test_result.list[0].GoodsID,
