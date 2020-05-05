@@ -9,6 +9,9 @@ const _ = db.command
 // 0-获取当前店铺的待发货商品
 // 1-获取具体待发货地点及数量
 // 2-修改当前商品的发货状态
+// 3-修改当前商品的支付状态
+// 4-修改当前商品的收货状态
+
 exports.main = async (event, context) => {
   if (event.flag == 0) {
     let ResultList = {}

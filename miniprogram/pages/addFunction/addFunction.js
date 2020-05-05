@@ -222,38 +222,34 @@ Page({
     wx.cloud.callFunction({
       name: 'order_edit',
       data: {
-        _id: 'fdb5d5d75ea29907001561545f423c72',
+        _id: '0',
         data: {
-          OpenID: 'OpenID',
-          ShopID: '1,2,3',
-          GoodsID: '1,2,3',
-          ReprintID: '1,2,3',
-          Num: '10,10,10',
-          CouponID: '1',
-          OriginalPrice: 110.5,
-          ActualPrice: 100.5,
-          LocationID: '1',
-          IsPay: true,
-          PayTime: '2020-04-24 02:00:00', //实际时间2020-04-24 10:00:00
-          IsDeliver: true,
-          DeliverTime: '2020-04-25 02:00:00',
-          IsReceiving: false,
-          ExpectedTime: '2020-04-26 02:00:00'
+          Order: {
+            OpenID: 'OpenID',
+            CouponID: '1',
+            OriginalPrice: 110.5,
+            ActualPrice: 100.5,
+            LocationID: '1',
+          },
+          OrderDetail: [{
+              ShopID: '1',
+              GoodsID: '1',
+              ReprintID: '1',
+              Num: '10',
+            },
+            {
+              ShopID: '2',
+              GoodsID: '3',
+              ReprintID: '4',
+              Num: '20',
+            }
+          ]
         }
       },
       success: res => {
-        wx.showToast({
-          title: '调用成功',
-        })
-        this.setData({
-          result: JSON.stringify(res)
-        })
+        console.log(res)
       },
       fail: err => {
-        wx.showToast({
-          icon: 'none',
-          title: '调用失败',
-        })
         console.error('[云函数] [sum] 调用失败：', err)
       }
     })

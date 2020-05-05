@@ -6,7 +6,24 @@ const db = cloud.database()
 // 云函数入口函数
 exports.main = async (event, context) => {
   try {
-    var data_json = event.data;
+    let result = {}
+    if (event._id == '0') {
+      let order_json = event.data.Order;
+      let order_detail_json = event.data.OrderDetail
+      result = await db.collection('Order').add({
+        data: order_json
+      })
+      for (let i = 0; i < order_detail_json.length; i++) {
+        order_detail_json[i].OrderID = result._id
+        await db.collection('OrderDetail').add({
+          data: order_detail_json[i]
+        })
+      }
+    } else {
+
+    }
+    return result;
+
 
     if (data_json.IsPay) {
       data_json.PayTime = new Date(data_json.PayTime)
