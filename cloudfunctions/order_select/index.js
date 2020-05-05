@@ -8,6 +8,7 @@ const _ = db.command
 // 云函数入口函数
 // 0-个人中心界面订单数量显示
 // 1-订单列表展示
+// 2-订单详情实现(暂时未实现，后期再说)
 exports.main = async (event, context) => {
 
   if (event.flag == 0) {
@@ -134,7 +135,6 @@ exports.main = async (event, context) => {
         }
       }
     } else {
-      console.log(1231231)
       let condition = {
         OpenID: event.data.OpenID,
         IsPay: true
@@ -142,9 +142,12 @@ exports.main = async (event, context) => {
       if (event.data.flag == 2) {
         condition.IsDeliver = false
       } else if (event.data.flag == 3) {
-        condition.IsDeliver = false
+        condition.IsDeliver = true,
+          condition.IsReceiving = false
       } else if (event.data.flag == 4) {
-        condition.IsDeliver = false
+        condition.IsDeliver = true,
+          condition.IsReceiving = true,
+          condition.IsEvaluate = false
       }
       await db.collection('OrderDetail').aggregate()
         .lookup({
