@@ -578,7 +578,7 @@ Page({
         // }
         flag: 2,
         data: {
-          GoodsID: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
+          OrderDetailID: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
         }
       },
       success: res => {

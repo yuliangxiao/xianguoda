@@ -9,7 +9,7 @@ const _ = db.command
 // 0-获取当前店铺的待发货商品
 // 1-获取具体待发货地点及数量
 // 2-修改当前商品的发货状态
-// 3-修改当前商品的支付状态
+// 3-修改当前订单的支付状态
 // 4-修改当前商品的收货状态
 
 exports.main = async (event, context) => {
@@ -67,13 +67,32 @@ exports.main = async (event, context) => {
     return ResultList;
   } else if (event.flag == 2) {
     return await db.collection('OrderDetail').where({
-        GoodsID: event.data.GoodsID,
-        IsDeliver: false
+        _id: event.data.OrderDetailID
       })
       .update({
         data: {
           IsDeliver: true,
           DeliverTime: db.serverDate()
+        },
+      });
+  } else if (event.flag == 3) {
+    return await db.collection('Order').where({
+        _id: event.data.OrderID,
+      })
+      .update({
+        data: {
+          IsPay: true,
+          PayTime: db.serverDate()
+        },
+      });
+  } else if (event.flag == 4) {
+    return await db.collection('OrderDetail').where({
+        _id: event.data.OrderDetailID
+      })
+      .update({
+        data: {
+          IsReceiving: true,
+          ReceivingTime: db.serverDate()
         },
       });
   } else {
