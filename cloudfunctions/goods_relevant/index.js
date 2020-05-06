@@ -11,7 +11,7 @@ const _ = db.command
 // 2-修改当前商品的发货状态
 // 3-修改当前订单的支付状态
 // 4-修改当前商品的收货状态
-
+// 5-退款接口(未测试)
 exports.main = async (event, context) => {
   if (event.flag == 0) {
     let ResultList = {}
@@ -66,16 +66,69 @@ exports.main = async (event, context) => {
     }
     return ResultList;
   } else if (event.flag == 2) {
-    return await db.collection('OrderDetail').where({
-        _id: event.data.OrderDetailID
-      })
-      .update({
-        data: {
-          IsDeliver: true,
-          DeliverTime: db.serverDate()
-        },
-      });
+    const OrderDetailIDList = event.data.OrderDetailIDList
+    for (let i = 0; i < OrderDetailIDList.length; i++) {
+      await db.collection('OrderDetail').where({
+          _id: OrderDetailIDList[i]
+        })
+        .update({
+          data: {
+            IsDeliver: true,
+            DeliverTime: db.serverDate()
+          },
+        });
+    }
+    return 'ok'
   } else if (event.flag == 3) {
+
+    let OrderDetail = {}
+    await db.collection("OrderDetail")
+      .aggregate()
+      .match({
+        OrderID: event.data.OrderID
+      })
+      .lookup({
+        from: "Order",
+        localField: 'OrderID',
+        foreignField: '_id',
+        as: 'Order'
+      })
+      .lookup({
+        from: "Reprint",
+        localField: 'ReprintID',
+        foreignField: '_id',
+        as: 'Reprint'
+      })
+      // .replaceRoot({
+      //   newRoot: $.mergeObjects([$.arrayElemAt(['$Order', 0]), '$$ROOT'])
+      // })
+      // .project({
+      //   Order: 0
+      // })
+      .end()
+      .then(res => OrderDetail = res)
+      .catch(err => OrderDetail = err)
+    for (let i = 0; i < OrderDetail.list.length; i++) {
+      await db.collection('PayRecord').add({
+        data: {
+          OpenID: '',
+          OrderID: '',
+          ReprintID: '',
+          GoodsID: '',
+          TotalPrice: '',
+          Price1: '',
+          Price2: '',
+          IsSettlement: '',
+          SettlementTime: '',
+          CreateTime: '',
+          OrderDetailID: '',
+          GoodsOpenID: '',
+          ReprintOpenID: ''
+        }
+      })
+    }
+
+
     return await db.collection('Order').where({
         _id: event.data.OrderID,
       })
@@ -95,6 +148,93 @@ exports.main = async (event, context) => {
           ReceivingTime: db.serverDate()
         },
       });
+  } else if (event.flag == 5) {
+    const OrderDetailIDList = event.data.OrderDetailIDList
+    for (let i = 0; i < OrderDetailIDList.length; i++) {
+      let OrderDetail = {}
+      await db.collection("OrderDetail")
+        .aggregate()
+        .match({
+          _id: OrderDetailIDList[i]
+        })
+        .lookup({
+          from: "Order",
+          localField: 'OrderID',
+          foreignField: '_id',
+          as: 'Order'
+        })
+        .lookup({
+          from: "Reprint",
+          localField: 'ReprintID',
+          foreignField: '_id',
+          as: 'Reprint'
+        })
+        // .replaceRoot({
+        //   newRoot: $.mergeObjects([$.arrayElemAt(['$Order', 0]), '$$ROOT'])
+        // })
+        // .project({
+        //   Order: 0
+        // })
+        .end()
+        .then(res => OrderDetail = res)
+        .catch(err => OrderDetail = err)
+
+      //查询当前订单是否有多个商品
+      let is_has_multiple_goods = false
+
+      let curr_detail = await db.collection('OrderDetail').where({
+        OpenID: OrderDetail.list[0].OrderID
+      }).get()
+
+      if (curr_detail.length > 1) {
+        is_has_multiple_goods = true
+      }
+      //应退回金额
+      let refund_print = 0
+      //如果没有使用优惠券
+      if (OrderDetail.list[0].OriginalPrice == OrderDetail.list[0].ActualPrice) {
+        //如果这个订单买了多个商品，应退回的金额等于当前商品购买的数量加上商品的单价
+        if (is_has_multiple_goods) {
+          refund_print = OrderDetail.list[0].Reprint[0].Price * OrderDetail.list[0].num
+        } else {
+          //如果当前订单只购买了一个产品，那么退回支付金额就可以
+          refund_print = OrderDetail.list[0].Order[0].ActualPrice
+        }
+      }
+      //如果使用了优惠券
+      else {
+        //如果这个订单购买了多个商品,退回的金额等于 当前商品的原价/商品支付的原来总价*商品的实际支付价格(不知道对不对)
+        if (is_has_multiple_goods) {
+          refund_print = OrderDetail.list[0].Reprint[0].Price * OrderDetail.list[0].num / OrderDetail.list[0].OriginalPrice * OrderDetail.list[0].ActualPrice
+        } else {
+          //如果当前订单只购买了一个产品，那么退回支付金额就可以
+          refund_print = OrderDetail.list[0].Order[0].ActualPrice
+        }
+      }
+      //修改订单状态
+      await db.collection('OrderDetail').where({
+          _id: OrderDetailIDList[i]
+        })
+        .update({
+          data: {
+            IsRefund: true,
+            RefundTime: db.serverDate()
+          },
+        });
+      //修改用户金额
+      const PayRecord = await db.collection('PayRecord').where({
+        _id: OrderDetail.list[0].Order[0].OpenID
+      }).get()
+      await db.collection('User').where({
+          _id: OrderDetail.list[0].Order[0].OpenID
+        })
+        .update({
+          data: {
+            Money: PayRecord.data[0].Money + refund_print
+          },
+        });
+    }
+    return 'ok'
   } else {
     return '123123';
   }

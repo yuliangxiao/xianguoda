@@ -9,6 +9,15 @@ exports.main = async (event, context) => {
   if (event._id == '0') {
     data_json.CreateTime = db.serverDate()
 
+    await db.collection('OrderDetail').where({
+        _id: data_json.OrderDetailID
+      })
+      .update({
+        data: {
+          IsEvaluate: true
+        }
+      });
+
     return await db.collection('Evaluate').add({
       data: data_json
     })

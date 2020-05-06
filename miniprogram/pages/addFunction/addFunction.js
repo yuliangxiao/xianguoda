@@ -318,7 +318,8 @@ Page({
           OpenID: 'OpenID',
           GoodID: '1',
           Leave: '1',
-          Remark: 'Remark'
+          Remark: 'Remark',
+          OrderDetailID: '19762d645ea9429f00129754668fb96c'
         }
       },
       success: res => {
@@ -576,10 +577,22 @@ Page({
         // data: {
         //   GoodsID: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
         // }
-        flag: 2,
+        // flag: 2,
+        // data: {
+        //   OrderDetailIDList: [
+        //   'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
+        // ]
+        // }
+        flag: 3,
         data: {
-          OrderDetailID: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
+          Order: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
         }
+        // flag: 5,
+        // data: {
+        //   OrderDetailIDList: [
+        //     'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
+        //   ]
+        // }
       },
       success: res => {
         console.log(res.result)
