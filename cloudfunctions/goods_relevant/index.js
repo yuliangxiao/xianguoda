@@ -109,19 +109,47 @@ exports.main = async (event, context) => {
       .then(res => OrderDetail = res)
       .catch(err => OrderDetail = err)
     for (let i = 0; i < OrderDetail.list.length; i++) {
+
+      let curr_goods = await db.collection('Goods').where({
+        _id: OrderDetail.list[i].Reprint[0].GoodsID
+      }).get()
+      let Price1 = 0
+      let Price2 = 0
+      let TotalPrice = OrderDetail.list[i].Num * OrderDetail.list[i].Reprint[0].Price
+      let GoodsOpenID = ''
+      let ReprintOpenID = ''
+
+      if (curr_goods.data[0].ShopID == OrderDetail.list[i].Reprint[0].ShopID) {
+        Price1 = TotalPrice
+
+        GoodsOpenID = curr_goods.data[0].OpenID
+        ReprintOpenID = curr_goods.data[0].OpenID
+
+      } else {
+        Price1 = OrderDetail.list[i].Num * curr_goods.data[0].InsidePrice
+        Price2 = TotalPrice - Price1
+
+        GoodsOpenID = curr_goods.data[0].OpenID
+
+        let curr_goods = await db.collection('Goods').where({
+          _id: OrderDetail.list[i].Reprint[0].GoodsID
+        }).get()
+        ReprintOpenID = curr_goods.data[0].OpenID
+      }
+
       await db.collection('PayRecord').add({
         data: {
-          OpenID: '',
-          OrderID: '',
-          ReprintID: '',
-          GoodsID: '',
-          TotalPrice: '',
-          Price1: '',
-          Price2: '',
-          IsSettlement: '',
-          SettlementTime: '',
-          CreateTime: '',
-          OrderDetailID: '',
+          OpenID: OrderDetail.list[i].OpenID,
+          OrderID: OrderDetail.list[i].OrderID,
+          ReprintID: OrderDetail.list[i].ReprintID,
+          GoodsID: OrderDetail.list[i].GoodsID,
+          TotalPrice: TotalPrice,
+          Price1: Price1,
+          Price2: Price2,
+          IsSettlement: flase,
+          // SettlementTime: ,
+          CreateTime: db.serverDate(),
+          OrderDetailID: OrderDetail.list[i]._id,
           GoodsOpenID: '',
           ReprintOpenID: ''
         }
