@@ -66,10 +66,15 @@ exports.main = async (event, context) => {
     }
     return ResultList;
   } else if (event.flag == 2) {
-    const OrderDetailIDList = event.data.OrderDetailIDList
-    for (let i = 0; i < OrderDetailIDList.length; i++) {
+    const OrderDetailList = await db.collection('OrderDetail').where({
+      GoodsID: event.data.GoodsID,
+      IsDeliver: false
+    }).get()
+
+    // const OrderDetailIDList = event.data.OrderDetailIDList
+    for (let i = 0; i < OrderDetailList.list.length; i++) {
       await db.collection('OrderDetail').where({
-          _id: OrderDetailIDList[i]
+          _id: OrderDetailList.list[i]._id
         })
         .update({
           data: {
@@ -150,8 +155,8 @@ exports.main = async (event, context) => {
           // SettlementTime: ,
           CreateTime: db.serverDate(),
           OrderDetailID: OrderDetail.list[i]._id,
-          GoodsOpenID: '',
-          ReprintOpenID: ''
+          GoodsOpenID: GoodsOpenID,
+          ReprintOpenID: ReprintOpenID
         }
       })
     }

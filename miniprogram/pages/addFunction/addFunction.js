@@ -579,9 +579,7 @@ Page({
         // }
         // flag: 2,
         // data: {
-        //   OrderDetailIDList: [
-        //   'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
-        // ]
+        //   GoodsID:'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
         // }
         flag: 3,
         data: {
