@@ -577,14 +577,18 @@ Page({
         // data: {
         //   GoodsID: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
         // }
-        // flag: 2,
-        // data: {
-        //   GoodsID:'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
-        // }
-        flag: 3,
+        flag: 2,
         data: {
-          Order: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
+          OrderDetailIDList: [
+            '6af880a55eb0e0a10014019375b20f83',
+            '5e847ab25eb0e112001819f158f2460f'
+          ]
+          // GoodsID: 'bLw6WZGPWbtEsgiithn5XFVp8G8WSBuluXmcxPlpPmgvr5pb'
         }
+        // flag: 3,
+        // data: {
+        //   OrderID: 'YKWOKLDC6C0lDWJxyaO0zC6UU5llGWZPjSzGtiJfPkUfbJEg'
+        // }
         // flag: 5,
         // data: {
         //   OrderDetailIDList: [

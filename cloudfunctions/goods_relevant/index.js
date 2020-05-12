@@ -5,6 +5,24 @@ cloud.init()
 const db = cloud.database()
 const $ = db.command.aggregate
 const _ = db.command
+
+//js 乘法函数
+//调用：accMul(arg1,arg2)
+//返回值：arg1乘以arg2的精确结果
+function accMul(arg1, arg2) {
+  var m = 0,
+    s1 = arg1.toString(),
+    s2 = arg2.toString();
+  try {
+    m += s1.split(".")[1].length
+  } catch (e) {}
+  try {
+    m += s2.split(".")[1].length
+  } catch (e) {}
+  return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m)
+}
+
+
 // 云函数入口函数 商户相关界面接口
 // 0-获取当前店铺的待发货商品
 // 1-获取具体待发货地点及数量
@@ -43,7 +61,10 @@ exports.main = async (event, context) => {
       })
       .group({
         _id: '$LocationID',
-        num: $.sum('$Num')
+        num: $.sum('$Num'),
+        detaillist: $.push({
+          detaillist: '$_id'
+        })
       })
       .end()
       .then(res => ResultList = res)
@@ -66,15 +87,29 @@ exports.main = async (event, context) => {
     }
     return ResultList;
   } else if (event.flag == 2) {
-    const OrderDetailList = await db.collection('OrderDetail').where({
-      GoodsID: event.data.GoodsID,
-      IsDeliver: false
-    }).get()
 
-    // const OrderDetailIDList = event.data.OrderDetailIDList
-    for (let i = 0; i < OrderDetailList.list.length; i++) {
+    //一键修改所有当前待发货的商品
+    // const OrderDetailList = await db.collection('OrderDetail').where({
+    //   GoodsID: event.data.GoodsID,
+    //   IsDeliver: false
+    // }).get()
+    // for (let i = 0; i < OrderDetailList.list.length; i++) {
+    //   await db.collection('OrderDetail').where({
+    //       _id: OrderDetailList.list[i]._id
+    //     })
+    //     .update({
+    //       data: {
+    //         IsDeliver: true,
+    //         DeliverTime: db.serverDate()
+    //       },
+    //     });
+    // }
+
+    //根据明细ID修改待发货商品
+    const OrderDetailIDList = event.data.OrderDetailIDList
+    for (let i = 0; i < OrderDetailIDList.length; i++) {
       await db.collection('OrderDetail').where({
-          _id: OrderDetailList.list[i]._id
+          _id: OrderDetailIDList[i]
         })
         .update({
           data: {
@@ -83,9 +118,10 @@ exports.main = async (event, context) => {
           },
         });
     }
+
     return 'ok'
   } else if (event.flag == 3) {
-
+    //查询当前订单的所有明细表
     let OrderDetail = {}
     await db.collection("OrderDetail")
       .aggregate()
@@ -104,6 +140,12 @@ exports.main = async (event, context) => {
         foreignField: '_id',
         as: 'Reprint'
       })
+      .lookup({
+        from: "Goods",
+        localField: 'GoodsID',
+        foreignField: '_id',
+        as: 'Goods'
+      })
       // .replaceRoot({
       //   newRoot: $.mergeObjects([$.arrayElemAt(['$Order', 0]), '$$ROOT'])
       // })
@@ -113,34 +155,48 @@ exports.main = async (event, context) => {
       .end()
       .then(res => OrderDetail = res)
       .catch(err => OrderDetail = err)
+    //添加个人支付记录表数据
+    await db.collection('PersonInEx').add({
+      data: {
+        OpenID: OrderDetail.list[0].OpenID,
+        Money: ActualPrice,
+        OrderID: OrderDetail.list[0].OrderID,
+        InExType: '1'
+      }
+    })
+    //遍历所有明细表，添加支付记录明细
     for (let i = 0; i < OrderDetail.list.length; i++) {
 
-      let curr_goods = await db.collection('Goods').where({
-        _id: OrderDetail.list[i].Reprint[0].GoodsID
-      }).get()
       let Price1 = 0
       let Price2 = 0
-      let TotalPrice = OrderDetail.list[i].Num * OrderDetail.list[i].Reprint[0].Price
+      //计算当前商品的总价格
+      let TotalPrice = accMul(OrderDetail.list[i].Num, OrderDetail.list[i].Reprint[0].Price)
       let GoodsOpenID = ''
       let ReprintOpenID = ''
-
-      if (curr_goods.data[0].ShopID == OrderDetail.list[i].Reprint[0].ShopID) {
+      //区分当前商品是团长转载的还是团长自己的，如果是团长转载的话就不需要计算Price2
+      if (OrderDetail.list[i].Goods[0].ShopID == OrderDetail.list[i].Reprint[0].ShopID) {
         Price1 = TotalPrice
 
-        GoodsOpenID = curr_goods.data[0].OpenID
-        ReprintOpenID = curr_goods.data[0].OpenID
-
+        GoodsOpenID = OrderDetail.list[i].Goods[0].OpenID
+        ReprintOpenID = OrderDetail.list[i].Goods[0].OpenID
+        // console.log(111111)
       } else {
-        Price1 = OrderDetail.list[i].Num * curr_goods.data[0].InsidePrice
+        Price1 = OrderDetail.list[i].Num * OrderDetail.list[i].Goods[0].InsidePrice
         Price2 = TotalPrice - Price1
 
-        GoodsOpenID = curr_goods.data[0].OpenID
+        GoodsOpenID = OrderDetail.list[i].Goods[0].OpenID
 
         let curr_goods = await db.collection('Goods').where({
           _id: OrderDetail.list[i].Reprint[0].GoodsID
         }).get()
-        ReprintOpenID = curr_goods.data[0].OpenID
+        ReprintOpenID = OrderDetail.list[i].Goods[0].OpenID
+        // console.log(22222)
       }
+      // console.log(Price1)
+      // console.log(Price2)
+      // console.log(GoodsOpenID)
+      // console.log(ReprintOpenID)
+      // console.log('-----------------------')
 
       await db.collection('PayRecord').add({
         data: {
@@ -151,16 +207,16 @@ exports.main = async (event, context) => {
           TotalPrice: TotalPrice,
           Price1: Price1,
           Price2: Price2,
-          IsSettlement: flase,
           // SettlementTime: ,
           CreateTime: db.serverDate(),
           OrderDetailID: OrderDetail.list[i]._id,
           GoodsOpenID: GoodsOpenID,
-          ReprintOpenID: ReprintOpenID
+          ReprintOpenID: ReprintOpenID,
+          IsSettlement: false
         }
       })
     }
-
+    // return '123123';
 
     return await db.collection('Order').where({
         _id: event.data.OrderID,
