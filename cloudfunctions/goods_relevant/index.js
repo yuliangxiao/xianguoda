@@ -159,7 +159,7 @@ exports.main = async (event, context) => {
     await db.collection('PersonInEx').add({
       data: {
         OpenID: OrderDetail.list[0].OpenID,
-        Money: ActualPrice,
+        Money: -ActualPrice,
         OrderID: OrderDetail.list[0].OrderID,
         InExType: '1'
       }
@@ -228,6 +228,64 @@ exports.main = async (event, context) => {
         },
       });
   } else if (event.flag == 4) {
+    //根据结算金额分别往商户账号跟团长账号添加金额
+    let PayRecord = await db.collection('PayRecord').where({
+      OrderDetailID: event.data.OrderDetailID
+    }).get()
+    //更改货源账号金额及添加收支记录表
+    let curr_user = await db.collection('User').where({
+      OpenID: PayRecord.data[0].GoodsOpenID
+    }).get()
+    await db.collection('User').where({
+        OpenID: PayRecord.data[0].GoodsOpenID
+      })
+      .update({
+        data: {
+          Money: curr_user.data[0].Money + PayRecord.data[0].Price1
+        },
+      });
+    await db.collection('PersonInEx').add({
+      data: {
+        OpenID: PayRecord.data[0].GoodsOpenID,
+        Money: PayRecord.data[0].Price1,
+        OrderID: PayRecord.data[0].OrderID,
+        InExType: '3'
+      }
+    })
+
+    //如果货物不是货源自己的，那需要给团长添加抽成
+    if (PayRecord.data[0].Price2 > 0) {
+      let curr_user1 = await db.collection('User').where({
+        OpenID: PayRecord.data[0].ReprintOpenID
+      }).get()
+      await db.collection('User').where({
+          OpenID: PayRecord.data[0].ReprintOpenID
+        })
+        .update({
+          data: {
+            Money: curr_user1.data[0].Money + PayRecord.data[0].Price2
+          },
+        });
+      await db.collection('PersonInEx').add({
+        data: {
+          OpenID: PayRecord.data[0].ReprintOpenID,
+          Money: PayRecord.data[0].Price2,
+          OrderID: PayRecord.data[0].OrderID,
+          InExType: '3'
+        }
+      })
+    }
+    //更改支付记录表的结算状态
+    await db.collection('PayRecord').where({
+        _id: PayRecord.data[0]._id
+      })
+      .update({
+        data: {
+          IsSettlement: true,
+          SettlementTime: db.serverDate()
+        },
+      });
+    //更改订单明细表的收货状态
     return await db.collection('OrderDetail').where({
         _id: event.data.OrderDetailID
       })
@@ -272,10 +330,10 @@ exports.main = async (event, context) => {
       let is_has_multiple_goods = false
 
       let curr_detail = await db.collection('OrderDetail').where({
-        OpenID: OrderDetail.list[0].OrderID
+        OrderID: OrderDetail.list[0].OrderID,
       }).get()
 
-      if (curr_detail.length > 1) {
+      if (curr_detail.data.length > 1) {
         is_has_multiple_goods = true
       }
       //应退回金额
@@ -284,8 +342,10 @@ exports.main = async (event, context) => {
       if (OrderDetail.list[0].OriginalPrice == OrderDetail.list[0].ActualPrice) {
         //如果这个订单买了多个商品，应退回的金额等于当前商品购买的数量加上商品的单价
         if (is_has_multiple_goods) {
+          console.log('1-------')
           refund_print = OrderDetail.list[0].Reprint[0].Price * OrderDetail.list[0].num
         } else {
+          console.log('2-------')
           //如果当前订单只购买了一个产品，那么退回支付金额就可以
           refund_print = OrderDetail.list[0].Order[0].ActualPrice
         }
@@ -294,8 +354,10 @@ exports.main = async (event, context) => {
       else {
         //如果这个订单购买了多个商品,退回的金额等于 当前商品的原价/商品支付的原来总价*商品的实际支付价格(不知道对不对)
         if (is_has_multiple_goods) {
+          console.log('1*********')
           refund_print = OrderDetail.list[0].Reprint[0].Price * OrderDetail.list[0].num / OrderDetail.list[0].OriginalPrice * OrderDetail.list[0].ActualPrice
         } else {
+          console.log('2*********')
           //如果当前订单只购买了一个产品，那么退回支付金额就可以
           refund_print = OrderDetail.list[0].Order[0].ActualPrice
         }
@@ -310,18 +372,28 @@ exports.main = async (event, context) => {
             RefundTime: db.serverDate()
           },
         });
+      console.log(OrderDetail.list[0].OpenID)
       //修改用户金额
-      const PayRecord = await db.collection('PayRecord').where({
-        _id: OrderDetail.list[0].Order[0].OpenID
+      const curr_user = await db.collection('User').where({
+        OpenID: OrderDetail.list[0].OpenID
       }).get()
       await db.collection('User').where({
-          _id: OrderDetail.list[0].Order[0].OpenID
+          OpenID: curr_user.data[0].OpenID
         })
         .update({
           data: {
-            Money: PayRecord.data[0].Money + refund_print
+            Money: curr_user.data[0].Money + refund_print
           },
         });
+
+      await db.collection('PersonInEx').add({
+        data: {
+          OpenID: OrderDetail.list[0].OpenID,
+          Money: refund_print,
+          OrderID: OrderDetail.list[0].OrderID,
+          InExType: '2'
+        }
+      })
     }
     return 'ok'
   } else {
