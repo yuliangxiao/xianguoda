@@ -114,12 +114,12 @@ exports.main = async (event, context) => {
     test_result.list[0].GoodsOtherList = []
   }
   //判断是否在配送范围内
-  if (GoodsList.list[i].DeliveryRange >
-    GetDistance(GoodsList.list[i].LocationXY.coordinates[1],
-      GoodsList.list[i].LocationXY.coordinates[0],
-      UserData.list[0].LocationXY.coordinates[1], UserData.list[0].LocationXY.coordinates[0])) {
+  // if (GoodsList.list[i].DeliveryRange >
+  //   GetDistance(GoodsList.list[i].LocationXY.coordinates[1],
+  //     GoodsList.list[i].LocationXY.coordinates[0],
+  //     UserData.list[0].LocationXY.coordinates[1], UserData.list[0].LocationXY.coordinates[0])) {
    
-  }
+  // }
 
   console.log(test_result)
   return test_result;

@@ -113,21 +113,32 @@ exports.main = async (event, context) => {
         .catch(err => ResultList = err)
       if (ResultList.list.length > 0) {
         let GoodsIDList = new Array()
+        let ReprintIDList = new Array()
         let GoodsID = 0
         for (var i = 0; i < ResultList.list.length; i++) {
           for (var j = 0; j < ResultList.list[i].OrderDetailList.length; j++) {
             GoodsIDList[GoodsID] = ResultList.list[i].OrderDetailList[j].GoodsID
+            ReprintIDList[GoodsID] = ResultList.list[i].OrderDetailList[j].ReprintID
             GoodsID++
           }
         }
         const GoodsList = await db.collection('Goods').where({
           _id: _.in(GoodsIDList)
         }).get()
+        const ReprintList = await db.collection('Reprint').where({
+          _id: _.in(ReprintIDList)
+        }).get()
         for (var i = 0; i < ResultList.list.length; i++) {
           for (var j = 0; j < ResultList.list[i].OrderDetailList.length; j++) {
             for (let z = 0; z < GoodsList.data.length; z++) {
               if (ResultList.list[i].OrderDetailList[j].GoodsID == GoodsList.data[z]._id) {
                 ResultList.list[i].OrderDetailList[j].Goods = GoodsList.data[z]
+                break
+              }
+            }
+            for (let m = 0; m < ReprintList.data.length; m++) {
+              if (ResultList.list[i].OrderDetailList[j].ReprintID == ReprintList.data[m]._id) {
+                ResultList.list[i].OrderDetailList[j].Reprint = ReprintList.data[m]
                 break
               }
             }
@@ -139,16 +150,19 @@ exports.main = async (event, context) => {
         OpenID: event.data.OpenID,
         IsPay: true
       }
-      if (event.data.flag == 2) {
-        condition.IsDeliver = false
-      } else if (event.data.flag == 3) {
+      if (event.data.type == 1) {
+        condition.IsDeliver = false //发货
+      } else if (event.data.type == 2) { //收货
         condition.IsDeliver = true,
           condition.IsReceiving = false
-      } else if (event.data.flag == 4) {
+      } else if (event.data.type == 3) { //评价
         condition.IsDeliver = true,
           condition.IsReceiving = true,
           condition.IsEvaluate = false
+      } else if (event.data.type == 4) { //已退款
+        condition.IsRefund = true
       }
+      console.log(condition)
       await db.collection('OrderDetail').aggregate()
         .lookup({
           from: "Order",
@@ -168,17 +182,27 @@ exports.main = async (event, context) => {
         .catch(err => ResultList = err)
 
       let GoodsIDList = new Array()
-
+      let ReprintIDList = new Array()
       for (var i = 0; i < ResultList.list.length; i++) {
         GoodsIDList[i] = ResultList.list[i].GoodsID
+        ReprintIDList[i] = ResultList.list[i].ReprintID
       }
       const GoodsList = await db.collection('Goods').where({
         _id: _.in(GoodsIDList)
       }).get()
+      const ReprintList = await db.collection('Reprint').where({
+        _id: _.in(ReprintIDList)
+      }).get()
       for (var i = 0; i < ResultList.list.length; i++) {
-        for (let z = 0; z < GoodsList.data.length; z++) {
+        for (var z = 0; z < GoodsList.data.length; z++) {
           if (ResultList.list[i].GoodsID == GoodsList.data[z]._id) {
             ResultList.list[i].Goods = GoodsList.data[z]
+            break
+          }
+        }
+        for (var m = 0; m < ReprintList.data.length; m++) {
+          if (ResultList.list[i].ReprintID == ReprintList.data[m]._id) {
+            ResultList.list[i].Reprint = ReprintList.data[m]
             break
           }
         }

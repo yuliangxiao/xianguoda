@@ -22,6 +22,22 @@ function accMul(arg1, arg2) {
   return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m)
 }
 
+function accDiv(arg1, arg2) {
+  var t1 = 0,
+    t2 = 0,
+    r1, r2;
+  try {
+    t1 = arg1.toString().split(".")[1].length
+  } catch (e) {}
+  try {
+    t2 = arg2.toString().split(".")[1].length
+  } catch (e) {}
+  with(Math) {
+    r1 = Number(arg1.toString().replace(".", ""))
+    r2 = Number(arg2.toString().replace(".", ""))
+    return accMul((r1 / r2), pow(10, t2 - t1));
+  }
+}
 
 // 云函数入口函数 商户相关界面接口
 // 0-获取当前店铺的待发货商品
@@ -339,11 +355,11 @@ exports.main = async (event, context) => {
       //应退回金额
       let refund_print = 0
       //如果没有使用优惠券
-      if (OrderDetail.list[0].OriginalPrice == OrderDetail.list[0].ActualPrice) {
+      if (OrderDetail.list[0].Order[0].OriginalPrice == OrderDetail.list[0].Order[0].ActualPrice) {
         //如果这个订单买了多个商品，应退回的金额等于当前商品购买的数量加上商品的单价
         if (is_has_multiple_goods) {
           console.log('1-------')
-          refund_print = OrderDetail.list[0].Reprint[0].Price * OrderDetail.list[0].num
+          refund_print = accMul(OrderDetail.list[0].Reprint[0].Price, OrderDetail.list[0].Num)
         } else {
           console.log('2-------')
           //如果当前订单只购买了一个产品，那么退回支付金额就可以
@@ -355,7 +371,12 @@ exports.main = async (event, context) => {
         //如果这个订单购买了多个商品,退回的金额等于 当前商品的原价/商品支付的原来总价*商品的实际支付价格(不知道对不对)
         if (is_has_multiple_goods) {
           console.log('1*********')
-          refund_print = OrderDetail.list[0].Reprint[0].Price * OrderDetail.list[0].num / OrderDetail.list[0].OriginalPrice * OrderDetail.list[0].ActualPrice
+          console.log(OrderDetail.list[0].Reprint[0].Price)
+          console.log(OrderDetail.list[0].Num)
+          console.log(OrderDetail.list[0].Order[0].OriginalPrice)
+          console.log(OrderDetail.list[0].Order[0].ActualPrice)
+
+          refund_print = accMul(accDiv(accMul(OrderDetail.list[0].Reprint[0].Price, OrderDetail.list[0].Num), OrderDetail.list[0].Order[0].OriginalPrice), OrderDetail.list[0].Order[0].ActualPrice).toFixed(2)
         } else {
           console.log('2*********')
           //如果当前订单只购买了一个产品，那么退回支付金额就可以

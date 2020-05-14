@@ -265,7 +265,7 @@ Page({
         flag: 1,
         data: {
           OpenID: 'openid',
-          type: 2
+          type: 4
         }
       },
       success: res => {
