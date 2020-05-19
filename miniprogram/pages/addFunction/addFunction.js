@@ -608,4 +608,35 @@ Page({
       }
     })
   },
+  service() {
+    wx.cloud.callFunction({
+      name: 'service',
+      data: {
+        flag: 1
+      },
+      success: res => {
+        console.log(res.result)
+      },
+      fail: err => {
+        console.error('[云函数] [sum] 调用失败：', err)
+      }
+    })
+  },
+  user_info() {
+    wx.cloud.callFunction({
+      name: 'user_info',
+      data: {
+        flag: 3,
+        data: {
+          OpenID: 'openid'
+        }
+      },
+      success: res => {
+        console.log(res.result)
+      },
+      fail: err => {
+        console.error('[云函数] [sum] 调用失败：', err)
+      }
+    })
+  },
 })

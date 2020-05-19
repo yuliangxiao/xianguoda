@@ -17,7 +17,7 @@ function GetDistance(lat1, lng1, lat2, lng2) {
   return s;
 }
 // 云函数入口函数 附属功能集合 
-//prarm1:flag 接口类型 0-获取热卖接口 (必填) 1-首页地图展示及首页列表展示接口 2-根据商品表id获取转载表数据
+//prarm1:flag 接口类型 0-获取热卖接口 (必填) 1-首页地图展示及首页列表展示接口 2-根据商品表id获取转载表数据 3-根据地图中商品是否在中心点展示简略信息
 //prarm2:data 参数列表 keyword-搜索关键字(1)
 
 //fun1 获取热卖列表，最多3个
@@ -64,7 +64,7 @@ exports.main = async (event, context) => {
     //   .then(res => GoodsList = res)
     //   .catch(err => GoodsList = err)
     let Result_List = {}
-    let c = 0
+    let c = 1
     for (let i = 0; i < GoodsList.data.length; i++) {
       if (GoodsList.data[i].DeliveryRange >
         GetDistance(GoodsList.data[i].LocationXY.latitude,
@@ -106,9 +106,6 @@ exports.main = async (event, context) => {
     if (event.data.keyword == '') {
       await db.collection("Goods")
         .aggregate()
-        .match({
-          IsFlag: true
-        })
         .lookup({
           from: "Location",
           localField: 'LocationID',
@@ -146,7 +143,6 @@ exports.main = async (event, context) => {
           UserData.list[0].LocationXY.coordinates[1], UserData.list[0].LocationXY.coordinates[0])) {
         Result_List[c] = GoodsList.list[i]
         c++
-        if (c > 3) break
       }
     }
     console.log(Result_List)
@@ -160,13 +156,19 @@ exports.main = async (event, context) => {
       })
       .lookup({
         from: "Reprint",
-        localField: 'ShopID',
-        foreignField: 'ShopID',
+        localField: '_id',
+        foreignField: 'GoodsID',
         as: 'ReprintList'
       })
       .end()
       .then(res => Result_List = res)
       .catch(err => Result_List = err)
+    console.log(Result_List)
+    return Result_List;
+  } else if (event.flag == 2) {
+    const Result_List = await db.collection('Goods').where({
+      id: event.data.GoodsID
+    }).get()
     console.log(Result_List)
     return Result_List;
   } else {
